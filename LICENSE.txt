@@ -1,0 +1,10 @@
+# NOTICE
+
+IRONBOUND ORCHESTRATOR was created by Kevin Gilbert / ironboundpotato.
+
+This repository documents original architecture work around governed multi-model orchestration, deterministic execution gating, explainable governance decisions, and council-style model deliberation.
+
+Public release establishes authorship and timestamped development history through Git commits.
+
+Project phrase:
+Governed multi-model deliberation under deterministic human-controlled orchestration.
