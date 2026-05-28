@@ -26,11 +26,12 @@ def run_council_deliberation(prompt):
 
     execution_trace = [
         "User Prompt",
-        "Governance Layer (future insertion point)",
+        "Governance Gate",
         "Council Orchestrator",
         "GPT Architect",
         "Claude Critique",
         "Gemini Expansion",
+        "Challenge Pass",
         "Synthesis Engine",
         "D.A.D. Audit Layer"
     ]
@@ -116,7 +117,60 @@ Critique:
     gemini_response = call_model("Gemini", gemini_prompt)
     council_outputs["Gemini Expansion"] = gemini_response
 
-    final_synthesis = synthesize_responses(council_outputs)
+    challenge_prompt = f"""
+You are the Challenge Pass inside a controlled AI council.
+
+Task:
+Analyze the Architect answer, Critique, and Expansion.
+
+Produce a concise challenge map with these sections:
+
+1. Consensus:
+What do the responses agree on?
+
+2. Disagreements:
+Where do the responses conflict, diverge, or emphasize different priorities?
+
+3. Weak Assumptions:
+What assumptions remain unsupported or under-examined?
+
+4. Strongest Reasoning:
+Which points appear most useful, grounded, or durable?
+
+5. Synthesis Instructions:
+What should the final synthesis preserve, correct, remove, or clarify?
+
+Constraints:
+- Do not answer the user directly.
+- Do not introduce unrelated topics.
+- Do not invent facts.
+- Be concise and operational.
+- Focus on improving final synthesis quality.
+
+User prompt:
+{prompt}
+
+Architect answer:
+{gpt_response}
+
+Critique:
+{claude_response}
+
+Expansion:
+{gemini_response}
+"""
+
+    challenge_response = call_model("Claude", challenge_prompt)
+    council_outputs["Challenge Pass"] = challenge_response
+
+    synthesis_inputs = {
+        "GPT Architect": gpt_response,
+        "Claude Critique": claude_response,
+        "Gemini Expansion": gemini_response,
+        "Challenge Pass": challenge_response
+    }
+
+    final_synthesis = synthesize_responses(synthesis_inputs)
 
     execution_end = datetime.utcnow()
     execution_time = round((execution_end - execution_start).total_seconds(), 2)
