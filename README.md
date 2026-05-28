@@ -147,6 +147,8 @@ Planned future improvements:
 
 ---
 
+- Council deliberation mode with critique-driven synthesis
+
 # Author
 
 Kevin Gilbert  
