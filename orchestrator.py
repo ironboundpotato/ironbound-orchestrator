@@ -35,8 +35,23 @@ def call_model(model_name, prompt):
         timeout=60
     )
 
-    response.raise_for_status()
+    if not response.ok:
+        try:
+            error_data = response.json()
+        except Exception:
+            error_data = response.text
+
+        raise RuntimeError(
+            f"OpenRouter Error ({response.status_code})\n"
+            f"Model: {model_id}\n"
+            f"Response: {error_data}"
+        )
 
     data = response.json()
 
-    return data["choices"][0]["message"]["content"]
+    try:
+        return data["choices"][0]["message"]["content"]
+    except Exception:
+        raise RuntimeError(
+            f"Unexpected OpenRouter response format:\n{data}"
+        )

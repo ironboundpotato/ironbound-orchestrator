@@ -21,6 +21,19 @@ def write_audit_log(audit_record):
         log_file.write(json.dumps(audit_record, ensure_ascii=False) + "\n")
 
 
+def safe_call_model(model_name, prompt, role_name):
+    try:
+        response = call_model(model_name, prompt)
+
+        if response is None:
+            return f"[{role_name} unavailable: {model_name} returned no response.]"
+
+        return response
+
+    except Exception as error:
+        return f"[{role_name} unavailable: {model_name} provider failure: {str(error)}]"
+
+
 def run_council_deliberation(prompt):
     execution_start = datetime.utcnow()
 
@@ -33,7 +46,7 @@ def run_council_deliberation(prompt):
         "Gemini Expansion",
         "Challenge Pass",
         "Synthesis Engine",
-        "D.A.D. Audit Layer"
+        "D.A.D. Audit Layer",
     ]
 
     council_outputs = {}
@@ -54,7 +67,7 @@ User prompt:
 {prompt}
 """
 
-    gpt_response = call_model("GPT", gpt_prompt)
+    gpt_response = safe_call_model("GPT", gpt_prompt, "GPT Architect")
     council_outputs["GPT Architect"] = gpt_response
 
     claude_prompt = f"""
@@ -83,7 +96,7 @@ Architect answer:
 {gpt_response}
 """
 
-    claude_response = call_model("Claude", claude_prompt)
+    claude_response = safe_call_model("Claude", claude_prompt, "Claude Critique")
     council_outputs["Claude Critique"] = claude_response
 
     gemini_prompt = f"""
@@ -114,7 +127,7 @@ Critique:
 {claude_response}
 """
 
-    gemini_response = call_model("Gemini", gemini_prompt)
+    gemini_response = safe_call_model("Gemini", gemini_prompt, "Gemini Expansion")
     council_outputs["Gemini Expansion"] = gemini_response
 
     challenge_prompt = f"""
@@ -160,14 +173,21 @@ Expansion:
 {gemini_response}
 """
 
-    challenge_response = call_model("Claude", challenge_prompt)
+    challenge_response = safe_call_model("Claude", challenge_prompt, "Challenge Pass")
+
+    if "provider failure" in challenge_response.lower() or "unavailable" in challenge_response.lower():
+        challenge_response = safe_call_model("Gemini", challenge_prompt, "Challenge Pass Fallback")
+
+    if "provider failure" in challenge_response.lower() or "unavailable" in challenge_response.lower():
+        challenge_response = safe_call_model("GPT", challenge_prompt, "Challenge Pass Fallback")
+
     council_outputs["Challenge Pass"] = challenge_response
 
     synthesis_inputs = {
         "GPT Architect": gpt_response,
         "Claude Critique": claude_response,
         "Gemini Expansion": gemini_response,
-        "Challenge Pass": challenge_response
+        "Challenge Pass": challenge_response,
     }
 
     final_synthesis = synthesize_responses(synthesis_inputs)
@@ -182,7 +202,7 @@ Expansion:
         "execution_trace": execution_trace,
         "council_outputs": council_outputs,
         "final_synthesis": final_synthesis,
-        "execution_time_seconds": execution_time
+        "execution_time_seconds": execution_time,
     }
 
     write_audit_log(audit_record)
@@ -192,5 +212,5 @@ Expansion:
         "execution_trace": execution_trace,
         "council_outputs": council_outputs,
         "final_synthesis": final_synthesis,
-        "execution_time_seconds": execution_time
+        "execution_time_seconds": execution_time,
     }
